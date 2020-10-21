@@ -1,13 +1,7 @@
-module dns {
-  source        = "./modules/aws/dns"
-  api_server_lb = var.api_server_lb
-  main_domain   = var.main_domain
-  zone_prefix   = var.resource_naming
-}
-
 module kubernetes {
-  depends_on                           = [module.dns]
-  source                               = "./modules/kubernetes/cluster"
+  source  = "bennu/yagan/kubernetes"
+  version = "1.19.2"
+
   addon_job_timeout                    = var.addon_job_timeout
   addons_include                       = var.addons_include
   always_pull_images                   = var.always_pull_images
@@ -78,13 +72,14 @@ module kubernetes {
   node_monitor_grace_period            = var.node_monitor_grace_period
   node_monitor_period                  = var.node_monitor_period
   node_status_update_frequency         = var.node_status_update_frequency
+  node_user                            = var.node_user
   nodes                                = var.nodes
   pod_eviction_timeout                 = var.pod_eviction_timeout
   pod_security_policy                  = var.pod_security_policy
   private_key                          = var.private_key
   resource_naming                      = var.resource_naming
   rke_authorization                    = var.rke_authorization
-  sans                                 = list(module.dns.api_server_fqdn)
+  sans                                 = var.sans
   scheduler_extra_args                 = var.scheduler_extra_args
   scheduler_extra_binds                = var.scheduler_extra_binds
   scheduler_extra_env                  = var.scheduler_extra_env
@@ -95,13 +90,13 @@ module kubernetes {
   system_reserved_cgroup               = var.system_reserved_cgroup
   upgrade_max_unavailable_controlplane = var.upgrade_max_unavailable_controlplane
   upgrade_max_unavailable_worker       = var.upgrade_max_unavailable_worker
-  vm_user                              = var.vm_user
   write_kubeconfig                     = var.write_kubeconfig
 }
 
 module addons {
-  depends_on                             = [module.kubernetes]
-  source                                 = "./modules/kubernetes/addons"
+  source  = "bennu/yagan/addons"
+  version = "1.0.0"
+
   acme_email                             = var.acme_email
   acme_server                            = var.acme_server
   addons                                 = var.addons
@@ -135,7 +130,7 @@ module addons {
   dex_ldap_usersearch_username           = var.dex_ldap_usersearch_username
   dex_oauth_skip_approval_screen         = var.dex_oauth_skip_approval_screen
   dex_url                                = local.dex_url
-  dns_zone                               = module.dns.zone_record_name
+  dns_zone                               = var.dns_zone
   external_dns_access_key                = var.external_dns_access_key
   external_dns_interval                  = var.external_dns_interval
   external_dns_prefer_cname              = var.external_dns_prefer_cname
@@ -143,7 +138,7 @@ module addons {
   external_dns_secret_key                = var.external_dns_secret_key
   gangway_api_server_url                 = module.kubernetes.api_server_url
   gangway_cluster_name                   = module.kubernetes.cluster_name
-  gangway_url                            = format("gangway.%s", module.dns.zone_record_name)
+  gangway_url                            = format("gangway.%s", var.dns_zone)
   grafana_url                            = var.grafana_url
   ingress_extra_args                     = var.ingress_extra_args
   ingress_max_replicas                   = var.ingress_max_replicas
@@ -157,5 +152,5 @@ module addons {
   treshold_cpu                           = var.treshold_cpu
   treshold_mem                           = var.treshold_mem
   treshold_pods                          = var.treshold_pods
-  zone_id                                = module.dns.zone_id
+  zone_id                                = var.zone_id
 }

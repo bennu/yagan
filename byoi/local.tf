@@ -1,13 +1,4 @@
 locals {
-  controlplane_ips = compact(
-    flatten(
-      [
-        for type, node in var.nodes : [
-          type == "controlplane" ? [for n in node : n.ip] : list("")
-        ]
-      ]
-    )
-  )
   enable_addons  = split(",", var.addons)
   enable_dex     = contains(local.enable_addons, "dex")
   enable_gangway = contains(local.enable_addons, "gangway")
